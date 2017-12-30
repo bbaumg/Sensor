@@ -129,8 +129,11 @@ class BME280(object):
         # Create device, catch permission errors
         try:
             self._device = i2c.get_i2c_device(address, **kwargs)
+            
+            # Next line added to the origional by bbaumg so the error will throw if a bad address is used.
+            self._device.readRaw8()
         except IOError:
-            print("Unable to communicate with sensor, check permissions.")
+            print("ERROR: " + str(__file__.split('/')[-1:][0]) +": The device could not be found on the bus = " + str(hex(address)))
             exit()
         # Load calibration values.
         self._load_calibration()

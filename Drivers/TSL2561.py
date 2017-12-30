@@ -1,5 +1,7 @@
 # Author:  Barrett Baumgartner
 # 
+# Driver for getting luminis data from the TSL2561 chip.
+#
 # Based on work done by 
 #	http://www.raspberryconnect.com/hardware-add-ons/item/324-tsl2561-luminosity-sensor-ir-and-visible-light
 # and
@@ -26,10 +28,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+# ----------------------------------------------------------------------
+# Example Usage (START)
+# ----------------------------------------------------------------------
+
+#~ import time
+#~ from TSL2561 import TSL2561
+
+#~ while True:
+	#~ chip = TSL2561()      #Alternate TSL2561(address=0x##, gain=0x##)
+	#~ print(chip.read_channel0())
+	#~ print(chip.read_channel1())
+	#~ print(chip.calculate_lux(chip.read_channel0()))
+	#~ print(chip.get_visible_lux())
+	#~ print(chip.get_full_lux())
+	#~ print(chip.get_ir_lux())
+	#~ chip.power_off
+	#~ time.sleep(1)
+
+# ----------------------------------------------------------------------
+# Example Usage (END)
+# ----------------------------------------------------------------------
+
 import smbus
 import time
 
-TSL2561_ADDRESS			= 0x39 # Default Address
+TSL2561_ADDRESS			= 0x39 # Default Address (Default = 0x39)
 TSL2561_CMD				= 0x80 # execute a command
 TSL2561_CHANNEL_0		= 0x0C # address for channel 0
 TSL2561_CHANNEL_1		= 0x0E # address for channel 1
@@ -47,19 +71,22 @@ TSL2561_MAN_START		= 0x1F # Start Manual Exposure
 TSL2561_MAN_END			= 0x1E # Stop Manual Exposure
 
 class TSL2561(object):
-	def __init__(self, gain=TSL2561_GAIN_LOW_LONG, bus=None, **kwargs):
+	def __init__(self, address=TSL2561_ADDRESS, gain=TSL2561_GAIN_LOW_LONG, bus=None, **kwargs):
 		# if the bus is not already imported, import and set to "1" works for raspberry pi
 		#	the # may be different for other boards
+		global TSL2561_ADDRESS
+		if address != TSL2561_ADDRESS:
+			TSL2561_ADDRESS = address
 		if bus is None:
 			import smbus
 		self._bus = smbus.SMBus(1)
 		try:
 			self._bus.read_byte(TSL2561_ADDRESS)
 		except:
-			print("ERROR: TSL2561: The device could not be found on the bus = " + str(hex(TSL2561_ADDRESS)))
+			print("ERROR: " + str(__file__.split('/')[-1:][0]) +": The device could not be found on the bus = " + str(hex(address)))
 			exit()
 		# Now turn on the lux sensor & set the gain/exposure desired.
-		self.power_on(gain)
+		self.power_on(gain=gain)
 		
 	def power_on(self, gain):
 		# Turn on channel 0
@@ -68,6 +95,10 @@ class TSL2561(object):
 		# Turn on channel 1
 		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_1 | TSL2561_CMD, TSL2561_POWER_ON)
 		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_1 | TSL2561_CMD, gain)
+	
+	def power_off(self):
+		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_0 | TSL2561_CMD, TSL2561_POWER_OFF)
+		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_1 | TSL2561_CMD, TSL2561_POWER_OFF)
 	
 	def read_channel(self, channel):
 		# function to read the data from the channel in its raw form

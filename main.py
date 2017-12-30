@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
 import logging
 import time
 import config
@@ -31,7 +32,7 @@ class something(object):
 if __name__ == "__main__":
 	while True:
 		print config.thingspeak['key']
-		chip = TSL2561(0x30)
+		chip = TSL2561()
 		print(chip.read_channel0())
 		print(chip.read_channel1())
 		print(chip.calculate_lux(chip.read_channel0()))
