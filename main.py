@@ -21,10 +21,25 @@
 import logging
 import time
 import config
+from TSL2561 import TSL2561
+
 
 class something(object):
 	def __init__(self, somethingelse):
 		self.somethingelse = somethingelse
 
-	
-print config.thingspeak['key']
+if __name__ == "__main__":
+	while True:
+		print config.thingspeak['key']
+		chip = TSL2561(0x30)
+		print(chip.read_channel0())
+		print(chip.read_channel1())
+		print(chip.calculate_lux(chip.read_channel0()))
+		print(chip.get_visible_lux())
+		print(chip.get_full_lux())
+		print(chip.get_ir_lux())
+		time.sleep(1)
+
+
+
+

@@ -32,7 +32,7 @@ thingKey = 'MR9C3L1EU7JAT6FB'
 # Initialize the display
 segment = SevenSegment.SevenSegment(address=varAddress)
 segment.begin()
-segment.set_brightness(0)
+segment.set_brightness(8)
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # END SETUP - BEGIN FUNCTIONS
