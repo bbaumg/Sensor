@@ -3,12 +3,11 @@ import time
 import config
 
 
-sleep = 15 # how many seconds to sleep between posts to the channel
-
 class thingspeak(object):
 	key = config.thingspeak['key']
 	temp = config.thingspeak['temp']
 	humidity = config.thingspeak['humidity']
+	pressure = config.thingspeak['pressure']
 	picpu = config.thingspeak['picpu']
 
 thingspeak = thingspeak()
@@ -16,7 +15,6 @@ print("Thingspeak Key = " + thingspeak.key)
 print("Thingspeak Temp = " + thingspeak.temp)
 print("Thingspeak Humidity = " + thingspeak.humidity)
 print("Thingspeak PiCPU = " + thingspeak.picpu)
-
 #Report Raspberry Pi internal temperature to Thingspeak Channel
 def thermometer():
 	while True:
@@ -48,4 +46,4 @@ def thermometer():
 if __name__ == "__main__":
         while True:
                 thermometer()
-                time.sleep(sleep)
+                time.sleep(15)

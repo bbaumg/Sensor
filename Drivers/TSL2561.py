@@ -1,6 +1,6 @@
 # Author:  Barrett Baumgartner
 # 
-# Driver for getting luminis data from the TSL2561 chip.
+# Driver for getting light data from the TSL2561 chip.
 #
 # Based on work done by 
 #	http://www.raspberryconnect.com/hardware-add-ons/item/324-tsl2561-luminosity-sensor-ir-and-visible-light
@@ -71,9 +71,9 @@ TSL2561_MAN_START		= 0x1F # Start Manual Exposure
 TSL2561_MAN_END			= 0x1E # Stop Manual Exposure
 
 class TSL2561(object):
+	""" Base class for reading data from the lux chip """
 	def __init__(self, address=TSL2561_ADDRESS, gain=TSL2561_GAIN_LOW_LONG, bus=None, **kwargs):
-		# if the bus is not already imported, import and set to "1" works for raspberry pi
-		#	the # may be different for other boards
+		""" Setup the bus, connect to it, and attempt to read from the device"""
 		global TSL2561_ADDRESS
 		if address != TSL2561_ADDRESS:
 			TSL2561_ADDRESS = address
@@ -89,6 +89,8 @@ class TSL2561(object):
 		self.power_on(gain=gain)
 		
 	def power_on(self, gain):
+		"""  The There are two channels to the chip and both need to be turned on
+		and set with an a gain level and exposure time"""
 		# Turn on channel 0
 		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_0 | TSL2561_CMD, TSL2561_POWER_ON)
 		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_0 | TSL2561_CMD, gain)
@@ -97,43 +99,44 @@ class TSL2561(object):
 		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_1 | TSL2561_CMD, gain)
 	
 	def power_off(self):
+		"""  Power the chip off when done"""
 		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_0 | TSL2561_CMD, TSL2561_POWER_OFF)
 		self._bus.write_byte_data(TSL2561_ADDRESS, TSL2561_CHANNEL_1 | TSL2561_CMD, TSL2561_POWER_OFF)
 	
 	def read_channel(self, channel):
-		# function to read the data from the channel in its raw form
+		""" function to read the data from the channel in its raw form """
 		result = self._bus.read_i2c_block_data(TSL2561_ADDRESS, channel | TSL2561_CMD, 2)
 		return result
 
 	def read_channel0(self):
-		# statically call channel 0 (Full Spectrum Light)
+		""" statically call channel 0 (Full Spectrum Light)"""
 		result = self.read_channel(TSL2561_CHANNEL_0)
 		return result
 
 	def read_channel1(self):
-		# statically call channel 1 (IR Only Light)
+		""" statically call channel 1 (IR Only Light)"""
 		result = self.read_channel(TSL2561_CHANNEL_1)
 		return result
 	
 	def calculate_lux(self, reading):
-		# calculation to get the single digit value for lux from the chip
+		""" calculation to get the single digit value for lux from the chip"""
 		lux = reading[1] * 256 + reading[0]
 		return lux
 	
 	def get_visible_lux(self):
-		# process to get visible lux which is (full spectrum - ir)
+		""" process to get visible lux which is (full spectrum - ir)"""
 		ch0 = self.calculate_lux(self.read_channel0())
 		ch1 = self.calculate_lux(self.read_channel1())
 		lux = ch0 - ch1
 		return lux
 	
 	def get_ir_lux(self):
-		# get and return just the IR channel
+		""" get and return just the IR channel"""
 		lux = self.calculate_lux(self.read_channel1())
 		return lux
 	
 	def get_full_lux(self):
-		# get and return the full spectrum channel
+		""" get and return the full spectrum channel"""
 		lux = self.calculate_lux(self.read_channel0())
 		return lux
 	
