@@ -22,60 +22,163 @@ import sys
 import logging
 import datetime
 import time
+#from Drivers.TSL2561 import TSL2561
+import Drivers.TSL2561 as TSL2561
+#from Drivers.THINGSPEAK import thingspeak
+import Drivers.THINGSPEAK as thingspeak
+#from Adafruit_BME280.BME280 import BME280
+import Adafruit_BME280.BME280 as BME280
+#from Adafruit_LED_Backpack import SevenSegment
+import Adafruit_LED_Backpack.SevenSegment as SevenSegment
+import Adafruit_SSD1306.SSD1306 as SSD1306
+#~ from PIL import Image
+#~ from PIL import ImageDraw
+#~ from PIL import ImageFont
+import Image
+import ImageDraw
+import ImageFont
+
 import config
-from Drivers.TSL2561 import TSL2561
-from Adafruit_BME280.BME280 import *
-from Adafruit_LED_Backpack import SevenSegment
 
+# Setup logging
+#logLevel = logging.CRITICAL
+#logLevel = logging.ERROR
+#logLevel = logging.WARNING
+logLevel = logging.INFO
+#logLevel = logging.DEBUG
+#cstlogFile = '/var/controller/main.log'
+logging.basicConfig(
+  level=logLevel, 
+  format='%(levelname)s:%(name)s:%(funcName)s - %(message)s', 
+  datefmt = '%Y-%m-%d %H:%M:%S',
+  #filename = cstlogFile)
+  )
+logger = logging.getLogger(__name__)
 
+print(config.settings['SEVEN_ADDRESS'])
 
+# Define all of the variables and device addresses
+SEVEN_ADDRESS			= 0x70   					# 7 Stegment address
+SEVEN_BRIGHT			= 15						# Default Brightness (0-15)
+BME280_ADDRESS			= 0x76						# BME280 address
+THINGSPEAK_CHANNEL		= 79569						# Channel ID #
+THINGSPEAK_KEY			= 'PNJNNXVDAEP5FC74'		# write API Key
+THINGSPEAD_FREQ			= 5							# how often in "min"
+OLED_ADDRESS			= 0x3C						# OLED disp address
+OLED_FONT				= 'VCR_OSD_MONO_1.001.ttf'
+OLED_FONT_SIZE			= 72
 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# END SETUP - BEGIN FUNCTIONS
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+def update_clock(now):
+	logger.info("Time: " + str(now))
+	hour = now.hour
+	minute = now.minute
+	segment.clear()
+	if hour > 12:
+		hour = hour - 12
+	if int(hour / 10) != 0:
+		segment.set_digit(0, int(hour / 10)) 	# Tens
+	segment.set_digit(1, hour % 10)          	# Ones
+	segment.set_digit(2, int(minute / 10))   	# Tens
+	segment.set_digit(3, minute % 10)        	# Ones
+	segment.set_colon(1)
+	try:
+		segment.write_display()
+	except Exception as e:
+		logger.exception("Error writing to the segment display")
 
-thingspeak=config.thingspeak()
-print thingspeak.key
-thingspeak.key = ['234523452345',0]
-print thingspeak.key
-for k,v in thingspeak:
-	print k,"=",v
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# END FUNCTIONS - BEGIN PROGRAM
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+logger.critical("**************************************************")
+logger.critical("*")
+logger.critical("* Starting Program")
+logger.critical("*")
+logger.critical("**************************************************")
+logger.critical("Log Level = " + str(logLevel))
+if config.functions.display_clock == True:
+	logger.info("Setting up the 7 segment display")
+	segment = SevenSegment.SevenSegment(address=SEVEN_ADDRESS)
+	segment.begin()
+	segment.set_brightness(SEVEN_BRIGHT)
+
+	logger.info("Quick test to make sure the display works")
+	testDispSetup = (
+		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
+		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
+		0x3f, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x3f)
+	for y in range(len(testDispSetup)):
+		try:
+			for ii in range(0,4,1):
+				segment.set_digit_raw(ii, testDispSetup[y])
+			segment.write_display()
+		except:
+			logger.exception("An error happened to the display " + str(sys.exc_info()[0]))
+		time.sleep(.04)
+
+if config.functions.display_temp == True:
+	logger.info("Setting up the OLED display")
+	disp = SSD1306.SSD1306_128_64(rst=None, i2c_address=OLED_ADDRESS)
+	disp.begin()
+	disp.clear()
+	disp.display()
+	width = disp.width
+	height = disp.height
+	image = Image.new('1', (width, height))
+	draw = ImageDraw.Draw(image)
+	padding = 0
+	top = padding
+	bottom = height-padding
+	x = 0
+	font = ImageFont.truetype(OLED_FONT, OLED_FONT_SIZE)
+
+logger.info("Setting up the BME sensor")
+sensor = BME280.BME280(address=BME280_ADDRESS)
+
+logger.info("Setting up the thingspeak channel")
+channel = thingspeak.thingspeak(channel=THINGSPEAK_CHANNEL, apiKey=THINGSPEAK_KEY)
+
+logger.info("**************************************************")
+logger.info("Beginning the Loop")
+while True:
+	# Upate the clock display
+	now = datetime.datetime.now()
+	minute = now.minute
+	second = now.second
+	if config.functions.display_clock == True:
+		update_clock(datetime.datetime.now())
 	
-s=config.someclass()
-for k,v in s:
-	print k,"=",v
-
-
-
-
-
-
-class something(object):
-	def __init__(self, somethingelse):
-		self.somethingelse = somethingelse
-
-if __name__ == "__main__":
-	while True:
-		#print config.thingspeak['key']
-		sensor = BME280(address=0x76)
-		degrees = sensor.read_temperature()
-		pascals = sensor.read_pressure()
-		hectopascals = pascals / 100
-		humidity = sensor.read_humidity()
-		dewpoint = sensor.read_dewpoint_f()
-		print 'Temp      = {0:0.3f} deg C'.format(degrees)
-		print 'Temp      = {0:0.3f} deg F'.format((degrees*9/5)+32)
-		print 'Pressure  = {0:0.2f} hPa'.format(hectopascals)
-		print 'Humidity  = {0:0.2f} %'.format(humidity)
-		print 'Dewpoint  = {0:0.2f} deg F'.format(dewpoint)
-		
-		chip = TSL2561()
-		print(chip.read_channel0())
-		print(chip.read_channel1())
-		print(chip.calculate_lux(chip.read_channel0()))
-		print(chip.get_visible_lux())
-		print(chip.get_full_lux())
-		print(chip.get_ir_lux())
-		time.sleep(1)
-
+	# Get the sensor Information
+	degrees_c = sensor.read_temperature()
+	degrees_f = int(round((degrees_c*9/5)+32, 0))
+	pascals = sensor.read_pressure()
+	hectopascals = int(round(pascals / 100, 0))
+	humidity = int(round(sensor.read_humidity(), 0))
+	
+	# Update the temp display
+	if config.functions.display_temp == True:
+		draw.rectangle((0,0,width,height), outline=0, fill=0)
+		draw.text((x, top), str(degrees_f),  font=font, fill=255)
+		disp.image(image)
+		disp.display()
+	
+	# Publish the data to Thingspeak
+	if (minute % 5) == 0:
+		channel.field[channel.field_name(name='Temp')] = degrees_f
+		channel.field[channel.field_name(name='Humidity')] = humidity
+		channel.field[channel.field_name(name='Pressure')] = hectopascals
+		channel.post_update()
+	# Sleep until the next minute
+	now = datetime.datetime.now()
+	if config.functions.display_clock == True or config.functions.display_temp == True:
+		sleep = 60 - now.second
+	else:
+		sleep = 300 - now.second
+	logger.info("Sleeping: " + str(sleep) + " seconds")
+	time.sleep(sleep)
 
 
 

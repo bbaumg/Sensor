@@ -115,15 +115,15 @@ outDispSetup()
 print "Press CTRL+Z to exit"
 
 while(True):
-  now = datetime.datetime.now()
-  minute = now.minute
-  second = now.second
-  outTime()
-  if (minute % 5) == 0:
-    getSensor()
-  sleep = 60 - second
-  logger.info("Sleeping: " + str(sleep) + " seconds")
-  time.sleep(sleep)
+	now = datetime.datetime.now()
+	minute = now.minute
+	second = now.second
+	outTime()
+	if (minute % 5) == 0:
+		getSensor()
+	sleep = 60 - second
+	logger.info("Sleeping: " + str(sleep) + " seconds")
+	time.sleep(sleep)
 
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -1,3 +1,28 @@
+settings = dict(
+	SEVEN_ADDRESS			= 0x70,   					# 7 Stegment address
+	SEVEN_BRIGHT			= 15,						# Default Brightness (0-15)
+	BME280_ADDRESS			= 0x76,						# BME280 address
+	THINGSPEAK_CHANNEL		= 79569,						# Channel ID #
+	THINGSPEAK_KEY			= 'PNJNNXVDAEP5FC74',		# write API Key
+	THINGSPEAD_FREQ			= 5,							# how often in "min"
+	OLED_ADDRESS			= 0x3C,						# OLED disp address
+	OLED_FONT				= 'VCR_OSD_MONO_1.001.ttf',
+	OLED_FONT_SIZE			= 72
+)
+
+class functions(object):
+	display_clock = False
+	display_temp = False
+
+
+thingspeak = dict(
+    key = 'PNJNNXVDAEP5FC74',
+    temp = 'field3',
+    humidity = 'field4',
+	pressure = 'field6',
+    picpu = 'field5',
+)
+
 class someclass(object):
 	x=1
 	y=2
@@ -15,7 +40,7 @@ class someclass(object):
 	def __iter__(self):
 		return self
 
-class thingspeak(object):
+class thingspeakA(object):
 	key = 'PNJNNXVDAEP5FC74'
 	temp = 'field3'
 	humidity = 'field4'

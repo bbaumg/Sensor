@@ -1,5 +1,5 @@
 import time
-from Drivers.TSL2561 import TSL2561
+from Drivers.TSL2561 import *
 
 while True:
 	chip = TSL2561()
