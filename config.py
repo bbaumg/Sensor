@@ -11,8 +11,8 @@ settings = dict(
 )
 
 class functions(object):
-	display_clock = False
-	display_temp = False
+	display_clock = True
+	display_temp = True
 
 
 thingspeak = dict(
